@@ -1,0 +1,47 @@
+model:
+  model_type: "latent"
+  vocab_size: 1024
+  d_model: 64
+  n_heads: 4
+  d_ff: 256
+  n_layers: 2
+  input_layers: 1
+  think_layers: 1
+  recurrent_steps: 2
+  max_seq_len: 128
+  dropout: 0.0
+  latent_alpha: 1.0
+  tie_word_embeddings: true
+  norm_type: "rmsnorm"
+
+training:
+  batch_size: 16
+  grad_accum_steps: 1
+  learning_rate: 0.001
+  min_lr: 0.0001
+  weight_decay: 0.01
+  warmup_steps: 20
+  max_steps: 100
+  max_epochs: 3
+  eval_interval: 25
+  eval_batches: 10
+  save_interval: 50
+  grad_clip: 1.0
+  mixed_precision: false
+  device: "auto"
+  seed: 42
+  output_dir: "checkpoints/smoke"
+  curriculum:
+    - progress: 0.3
+      steps: [1]
+    - progress: 0.7
+      steps: [1, 2]
+    - progress: 1.0
+      steps: [1, 2, 4]
+
+data:
+  train_path: "data/synthetic/train.jsonl"
+  val_path: "data/synthetic/val.jsonl"
+  test_path: "data/synthetic/test.jsonl"
+  tokenizer_path: "checkpoints/tokenizer_smoke.json"
+  max_seq_len: 128

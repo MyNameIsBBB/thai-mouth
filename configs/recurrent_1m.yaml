@@ -1,0 +1,46 @@
+model:
+  model_type: "recurrent"
+  vocab_size: 4096
+  d_model: 144
+  n_heads: 4
+  d_ff: 576
+  input_layers: 1
+  think_layers: 1
+  recurrent_steps: 4
+  max_seq_len: 256
+  dropout: 0.05
+  tie_word_embeddings: true
+  norm_type: "rmsnorm"
+
+training:
+  batch_size: 32
+  grad_accum_steps: 2
+  learning_rate: 0.0006
+  min_lr: 0.00006
+  weight_decay: 0.01
+  warmup_steps: 100
+  max_epochs: 10
+  eval_interval: 100
+  eval_batches: 20
+  save_interval: 500
+  grad_clip: 1.0
+  mixed_precision: true
+  device: "auto"
+  seed: 42
+  output_dir: "checkpoints/recurrent_1m"
+  curriculum:
+    - progress: 0.2
+      steps: [1]
+    - progress: 0.5
+      steps: [1, 2]
+    - progress: 0.8
+      steps: [1, 2, 4]
+    - progress: 1.0
+      steps: [1, 2, 4, 8]
+
+data:
+  train_path: "data/synthetic/train.jsonl"
+  val_path: "data/synthetic/val.jsonl"
+  test_path: "data/synthetic/test.jsonl"
+  tokenizer_path: "checkpoints/tokenizer.json"
+  max_seq_len: 256

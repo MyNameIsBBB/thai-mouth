@@ -1,0 +1,47 @@
+model:
+  model_type: "latent"
+  vocab_size: 8192
+  d_model: 640
+  n_heads: 8
+  d_ff: 2560
+  input_layers: 2
+  think_layers: 2
+  recurrent_steps: 8
+  max_seq_len: 512
+  dropout: 0.1
+  latent_alpha: 1.0
+  tie_word_embeddings: true
+  norm_type: "rmsnorm"
+
+training:
+  batch_size: 32
+  grad_accum_steps: 4
+  learning_rate: 0.0003
+  min_lr: 0.00003
+  weight_decay: 0.01
+  warmup_steps: 200
+  max_epochs: 20
+  eval_interval: 200
+  eval_batches: 50
+  save_interval: 1000
+  grad_clip: 1.0
+  mixed_precision: true
+  device: "auto"
+  seed: 42
+  output_dir: "checkpoints/latent_30m"
+  curriculum:
+    - progress: 0.2
+      steps: [1, 2]
+    - progress: 0.5
+      steps: [2, 4]
+    - progress: 0.8
+      steps: [4, 6, 8]
+    - progress: 1.0
+      steps: [4, 8, 12, 16]
+
+data:
+  train_path: "data/processed/train.jsonl"
+  val_path: "data/processed/val.jsonl"
+  test_path: "data/processed/test.jsonl"
+  tokenizer_path: "checkpoints/tokenizer_8k.json"
+  max_seq_len: 512
