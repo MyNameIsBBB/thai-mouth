@@ -9,6 +9,7 @@ import argparse
 import contextlib
 import csv
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional
@@ -223,8 +224,20 @@ def _aggregate(metric_rows: List[dict], setting_rows: List[dict]) -> dict:
     return {"accuracy": accuracy, "settings": settings}
 
 
-def _save_heatmaps(aggregate: dict, protocol: dict, output_dir: Path) -> None:
+def _get_pyplot(output_dir: Path):
+    matplotlib_config_dir = output_dir / ".matplotlib"
+    matplotlib_config_dir.mkdir(parents=True, exist_ok=True)
+    os.environ.setdefault("MPLCONFIGDIR", str(matplotlib_config_dir.resolve()))
+    import matplotlib
+
+    matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+
+    return plt
+
+
+def _save_heatmaps(aggregate: dict, protocol: dict, output_dir: Path) -> None:
+    plt = _get_pyplot(output_dir)
 
     alphas = protocol["alphas"]
     recurrent_steps = protocol["recurrent_steps"]
@@ -273,7 +286,7 @@ def _save_heatmaps(aggregate: dict, protocol: dict, output_dir: Path) -> None:
 
 
 def _save_tradeoff_curves(aggregate: dict, protocol: dict, output_dir: Path) -> None:
-    import matplotlib.pyplot as plt
+    plt = _get_pyplot(output_dir)
 
     primary_alpha = protocol["primary_alpha"]
     recurrent_steps = protocol["recurrent_steps"]
