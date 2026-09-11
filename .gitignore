@@ -39,6 +39,7 @@ checkpoints/*
 !checkpoints/.gitkeep
 results/*
 !results/.gitkeep
+configs/generated/
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*

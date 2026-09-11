@@ -253,7 +253,7 @@ class Trainer:
 
         # Final Validation
         final_eval = self.evaluate()
-        print(f"\n[✓] Training Finished! Final Validation Loss: {final_eval['val_loss']:.4f} | PPL: {final_eval['val_perplexity']:.2f}")
+        print(f"\n[OK] Training Finished! Final Validation Loss: {final_eval['val_loss']:.4f} | PPL: {final_eval['val_perplexity']:.2f}")
         
         # Save Final Model Checkpoint
         final_ckpt = save_checkpoint(
