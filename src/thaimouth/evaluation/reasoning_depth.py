@@ -40,13 +40,11 @@ def generate_depth_partitioned_benchmark(
             # Mix comparison, logic, and arithmetic
             cat = rng.choice(["comp", "logic", "arith"])
             if cat == "comp":
-                samples.append(generate_comparison_sample(THAI_NAMES_TEST, hops=hops))
+                samples.append(generate_comparison_sample(THAI_NAMES_TEST, hops=hops, rng=rng))
             elif cat == "logic":
-                samples.append(generate_logic_sample(hops=hops))
+                samples.append(generate_logic_sample(hops=hops, rng=rng))
             else:
-                # arithmetic bounded steps
-                steps = min(hops, 8)
-                samples.append(generate_arithmetic_sample(THAI_NAMES_TEST, steps=steps))
+                samples.append(generate_arithmetic_sample(THAI_NAMES_TEST, steps=hops, rng=rng))
         benchmark_by_hop[hops] = samples
         
     return benchmark_by_hop
@@ -59,15 +57,20 @@ def evaluate_reasoning_batch(
     samples: List[Dict],
     recurrent_steps: int,
     device: torch.device,
-    max_new_tokens: int = 36
-) -> Tuple[int, int, float, Optional[Dict]]:
+    max_new_tokens: int = 36,
+    return_predictions: bool = False,
+) -> Union[
+    Tuple[int, int, float, Optional[Dict]],
+    Tuple[int, int, float, Optional[Dict], List[Dict]],
+]:
     """
     Batched evaluation over a list of reasoning samples.
     Accurately passes recurrent_steps and dynamic attention masks in every step.
     Returns (correct_count, total_samples, accuracy_pct, latent_dynamics).
     """
     if not samples:
-        return 0, 0, 0.0, None
+        empty = (0, 0, 0.0, None)
+        return (*empty, []) if return_predictions else empty
 
     prompts = [f"<s><question> {s['question'].strip()} </question><reasoning>" for s in samples]
     gold_answers = [s["answer"].strip() for s in samples]
@@ -89,12 +92,14 @@ def evaluate_reasoning_batch(
     attn_mask = torch.tensor(attention_masks, dtype=torch.float32, device=device)
     
     # 1. Forward prompt pass with trajectory tracking
-    out = model(
-        input_ids=input_ids,
-        attention_mask=attn_mask,
-        recurrent_steps=recurrent_steps,
-        return_trajectory=True
-    )
+    forward_args = {
+        "input_ids": input_ids,
+        "attention_mask": attn_mask,
+        "recurrent_steps": recurrent_steps,
+    }
+    if getattr(model.config, "model_type", "") != "baseline":
+        forward_args["return_trajectory"] = True
+    out = model(**forward_args)
     
     dynamics = None
     if "trajectory_latents" in out and len(out["trajectory_latents"]) > 1:
@@ -134,18 +139,36 @@ def evaluate_reasoning_batch(
 
     # 3. Check correctness: parse generated answer tag
     correct_cnt = 0
+    predictions = []
     for b_idx, gold in enumerate(gold_answers):
         gen_text = tokenizer.decode(generated_ids[b_idx], skip_special_tokens=False)
+        completion_text = tokenizer.decode(
+            generated_ids[b_idx][len(encoded_prompts[b_idx]):],
+            skip_special_tokens=False,
+        )
         # Check if gold answer is in the answer portion or exact tag
+        is_correct = False
         if "<answer>" in gen_text:
             ans_part = gen_text.split("<answer>")[-1].replace("</answer>", "").replace("</s>", "").strip()
             if gold in ans_part:
-                correct_cnt += 1
+                is_correct = True
         elif f"<answer> {gold}" in gen_text:
-            correct_cnt += 1
+            is_correct = True
+        correct_cnt += int(is_correct)
+        if return_predictions:
+            predictions.append({
+                "question": samples[b_idx]["question"],
+                "category": samples[b_idx].get("category"),
+                "hops": samples[b_idx].get("hops"),
+                "gold_answer": gold,
+                "generated_text": gen_text,
+                "generated_completion": completion_text,
+                "correct": is_correct,
+            })
 
     acc = (correct_cnt / len(samples)) * 100.0
-    return correct_cnt, len(samples), acc, dynamics
+    result = (correct_cnt, len(samples), acc, dynamics)
+    return (*result, predictions) if return_predictions else result
 
 
 def run_reasoning_depth_eval_for_model(

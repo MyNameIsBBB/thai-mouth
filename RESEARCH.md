@@ -42,3 +42,28 @@ To test $H_1$ vs $H_0$, experiments must log:
 1. **Perplexity ($PPL$) vs Steps ($R$):** Does validation loss decrease monotonically as $R$ increases from 1 to 8?
 2. **Multi-Hop Reasoning Exact Match:** Does transitive accuracy ($A > B > C > D$) scale with $R$?
 3. **Accuracy per Parameter ($\frac{\text{Acc}}{\text{Params}}$):** Does Recurrent Latent LM achieve superior performance per unit memory footprint compared to fixed-layer baselines?
+
+## 5. Milestone 0.3.1 Exit Criteria
+
+Variant B remains frozen during this milestone. A single checkpoint per seed
+is evaluated at `R = 1, 2, 4, 8, 16, 32`; inference alpha is swept over
+`0.1, 0.25, 0.5, 1.0`, with `0.5` pre-registered as the primary setting.
+
+The milestone passes only when all configured gates pass:
+
+1. Numerical stability: latent measurements remain finite, norm growth stays
+   within the registered bound, and generated outputs do not collapse.
+2. Adaptive computation: the same checkpoint improves from low to high `R`
+   across at least four of five seeds and the mean curve is predominantly
+   non-decreasing.
+3. Useful computation: Variant B beats independently trained fixed-depth
+   controls at matched inference FLOPs, both overall and on hard tasks.
+4. Efficiency: accuracy gain per additional GFLOP exceeds the fixed-depth
+   control curve.
+5. Dynamics: relative latent updates decrease across recurrent iterations
+   without beginning at an effectively dead fixed point.
+
+Passing stability alone supports only a stability claim. Passing stability and
+adaptive computation supports evidence for test-time recurrent computation.
+The project advances to the 5M tier only after the compute-matched advantage is
+also reproduced.

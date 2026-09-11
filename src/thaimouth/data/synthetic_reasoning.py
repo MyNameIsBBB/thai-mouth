@@ -8,7 +8,7 @@ import argparse
 import json
 import random
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 # Thai names pools for generating disjoint entity sets
@@ -41,14 +41,17 @@ CASUAL_CONVERSATIONS = [
 ]
 
 
-def generate_comparison_sample(names: List[str], hops: int = 2) -> Dict:
+def generate_comparison_sample(
+    names: List[str], hops: int = 2, rng: Optional[random.Random] = None
+) -> Dict:
     """
     Generates transitive comparison reasoning of arbitrary hop depth.
     Example (hops=3): A สูงกว่า B, B สูงกว่า C, C สูงกว่า D -> ใครสูงที่สุด
     """
     assert len(names) >= hops + 1, f"Need at least {hops+1} names, got {len(names)}"
-    selected_names = random.sample(names, hops + 1)
-    attribute = random.choice([
+    rng = rng or random
+    selected_names = rng.sample(names, hops + 1)
+    attribute = rng.choice([
         ("สูงกว่า", "เตี้ยกว่า", "ใครสูงที่สุด", selected_names[0]),
         ("มีเงินมากกว่า", "มีเงินน้อยกว่า", "ใครมีเงินมากที่สุด", selected_names[0]),
         ("วิ่งเร็วกว่า", "วิ่งช้ากว่า", "ใครวิ่งเร็วที่สุด", selected_names[0]),
@@ -79,24 +82,27 @@ def generate_comparison_sample(names: List[str], hops: int = 2) -> Dict:
     }
 
 
-def generate_arithmetic_sample(names: List[str], steps: int = 2) -> Dict:
+def generate_arithmetic_sample(
+    names: List[str], steps: int = 2, rng: Optional[random.Random] = None
+) -> Dict:
     """
     Generates multi-step arithmetic word problem of arbitrary step depth.
     """
-    name = random.choice(names)
-    current = random.randint(30, 100)
+    rng = rng or random
+    name = rng.choice(names)
+    current = rng.randint(30, 100)
     premises = [f"{name}มีเงิน {current} บาท"]
     reasoning = [f"เริ่มต้นมี {current} บาท"]
     
     for step_idx in range(steps):
         is_add = (step_idx % 2 == 0) or (current < 20)
         if is_add:
-            amount = random.randint(10, 40)
+            amount = rng.randint(10, 40)
             current += amount
             premises.append(f"ได้รับเพิ่ม {amount} บาท")
             reasoning.append(f"ได้เพิ่ม {amount} บาท รวมเป็น {current} บาท")
         else:
-            amount = random.randint(5, max(6, min(current - 5, 30)))
+            amount = rng.randint(5, max(6, min(current - 5, 30)))
             current -= amount
             premises.append(f"ซื้อของไป {amount} บาท")
             reasoning.append(f"จ่ายไป {amount} บาท เหลือเงิน {current} บาท")
@@ -114,10 +120,11 @@ def generate_arithmetic_sample(names: List[str], steps: int = 2) -> Dict:
     }
 
 
-def generate_logic_sample(hops: int = 2) -> Dict:
+def generate_logic_sample(hops: int = 2, rng: Optional[random.Random] = None) -> Dict:
     """
     Generates logical implication chain: E1 -> E2 -> ... -> E_{hops+1}
     """
+    rng = rng or random
     event_pool = [
         "ฝนตกหนัก", "ถนนเปียกน้ำ", "การจราจรติดขัด", "รถประจำทางมาช้า", "เดินทางถึงที่ทำงานสาย",
         "หัวหน้าเรียกพบ", "ต้องอยู่ทำงานล่วงเวลา", "กลับบ้านดึก", "นอนหลับพักผ่อนไม่เพียงพอ",
@@ -129,7 +136,7 @@ def generate_logic_sample(hops: int = 2) -> Dict:
     if len(event_pool) < hops + 1:
         start_idx = 0
     else:
-        start_idx = random.randint(0, len(event_pool) - (hops + 1))
+        start_idx = rng.randint(0, len(event_pool) - (hops + 1))
     
     events = event_pool[start_idx : start_idx + hops + 1]
     while len(events) < hops + 1:

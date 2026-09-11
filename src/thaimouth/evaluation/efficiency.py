@@ -6,6 +6,7 @@ Measures latency (ms/token), throughput (tokens/sec), and memory.
 import time
 from typing import Dict, List, Optional
 import torch
+from thaimouth.evaluation.compute import estimate_forward_flops
 from thaimouth.models.common import count_parameters
 
 
@@ -46,11 +47,20 @@ def benchmark_efficiency(
     total_tokens = batch_size * seq_len * num_runs
     tokens_per_sec = total_tokens / elapsed
     ms_per_token = avg_latency_ms / (batch_size * seq_len)
+    compute = estimate_forward_flops(
+        model,
+        recurrent_steps=recurrent_steps,
+        batch_size=batch_size,
+        seq_len=seq_len,
+    )
     
     return {
         "recurrent_steps": recurrent_steps,
         "latency_ms": round(avg_latency_ms, 2),
         "ms_per_token": round(ms_per_token, 4),
         "tokens_per_sec": round(tokens_per_sec, 1),
-        "num_params": count_parameters(model)
+        "num_params": count_parameters(model),
+        "estimated_flops": compute.total_flops,
+        "estimated_gflops": round(compute.gflops, 6),
+        "flops_convention": "multiply_add_is_2; dominant_matmuls_only"
     }

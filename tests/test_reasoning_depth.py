@@ -40,6 +40,15 @@ def test_partitioned_benchmark_structure():
     for hop in [1, 2, 4, 8, 16]:
         assert hop in benchmark
         assert len(benchmark[hop]) == 5
+        assert all(sample["hops"] == hop for sample in benchmark[hop])
+
+
+def test_partitioned_benchmark_is_deterministic_per_seed():
+    first = generate_depth_partitioned_benchmark(samples_per_depth=5, seed=123)
+    second = generate_depth_partitioned_benchmark(samples_per_depth=5, seed=123)
+    different = generate_depth_partitioned_benchmark(samples_per_depth=5, seed=124)
+    assert first == second
+    assert first != different
 
 
 def test_latent_dynamics_computation():

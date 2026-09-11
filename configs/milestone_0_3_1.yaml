@@ -1,0 +1,38 @@
+experiment:
+  name: "milestone_0_3_1"
+  variant_b_config: "configs/ablation_prenorm.yaml"
+  generated_config_dir: "configs/generated/milestone_0_3_1"
+  checkpoint_dir: "checkpoints/milestone_0_3_1"
+  results_dir: "results/milestone_0_3_1"
+  seeds: [1, 2, 3, 4, 5]
+  benchmark_seed: 31031
+  training_compute_policy: "same_data_and_optimizer_steps"
+  recurrent_steps: [1, 2, 4, 8, 16, 32]
+  alphas: [0.1, 0.25, 0.5, 1.0]
+  primary_alpha: 0.5
+  hop_depths: [1, 2, 4, 8, 16]
+  difficulty:
+    easy: [1]
+    medium: [2, 4]
+    hard: [8, 16]
+  samples_per_depth: 30
+  max_new_tokens: 36
+  efficiency:
+    batch_size: 1
+    seq_len: 128
+    num_warmup: 5
+    num_runs: 20
+  matching:
+    max_parameter_gap_fraction: 0.01
+    max_compute_gap_fraction: 0.05
+  exit_criteria:
+    max_norm_growth_ratio: 8.0
+    min_unique_output_fraction: 0.10
+    min_nonempty_output_fraction: 0.90
+    min_accuracy_gain_points: 1.0
+    min_positive_seed_fraction: 0.80
+    min_monotonic_transition_fraction: 0.60
+    min_control_margin_points: 0.0
+    min_compute_control_win_fraction: 0.60
+    min_dynamics_decrease_fraction: 0.80
+    min_initial_relative_delta: 0.0001

@@ -127,7 +127,8 @@ thaimouth/
 - [x] **Milestone 0.1:** Core causal Transformer, recurrent, and latent architectures with parameter weight tying.
 - [x] **Milestone 0.2:** Multi-hop reasoning depth benchmark (1, 2, 4, 8, 16-hops), multi-seed evaluation, and latent trajectory tracking.
 - [ ] **Milestone 0.3:** Recurrent PreNorm / Gated residual stabilization ($Z_{t+1} = \text{RMSNorm}(Z_t + \alpha F(Z_t))$) to bound latent magnitude.
-- [ ] **Milestone 0.4:** Scale to 5M parameter tier with compute-matched baseline comparisons.
+- [ ] **Milestone 0.3.1:** Frozen Variant B, five-seed `alpha x R` evaluation, difficulty strata, and parameter/compute-matched controls under pre-registered exit gates.
+- [ ] **Milestone 0.4:** Scale to 5M only after Milestone 0.3.1 demonstrates a reproducible compute-matched advantage.
 - [ ] **Milestone 0.5:** Scale to 30M parameter conversational Thai model.
 
 # thai-mouth
